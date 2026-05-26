@@ -75,5 +75,21 @@
     "debug": {
       "statusBarVisibility": "hidden"
     }
+  },
+
+  // CMake Tools: use the conda-windows-debug preset which sets FREECAD_LIBPACK_USE=OFF, BUILD_WITH_CONDA=ON, etc.
+  "cmake.configurePreset": "conda-windows-debug",
+  "cmake.cmakePath": "${workspaceFolder}/.pixi/envs/default/Library/bin/cmake.exe",
+  "cmake.buildDirectory": "${workspaceFolder}/build/debug",
+  "cmake.configureSettings": {
+    "CMAKE_BUILD_TYPE": "Debug",
+    "CMAKE_PREFIX_PATH": "${workspaceFolder}/.pixi/envs/default/Library",
+    "FREECAD_RELEASE_PDB": "OFF"
+  },
+
+  // Set Pixi environment variables for CMake Tools so moc.exe and other tools find their DLLs
+  "cmake.environment": {
+    "PATH": "${workspaceFolder}/.pixi/envs/default;${workspaceFolder}/.pixi/envs/default/Library/mingw-w64/bin;${workspaceFolder}/.pixi/envs/default/Library/usr/bin;${workspaceFolder}/.pixi/envs/default/Library/bin;${workspaceFolder}/.pixi/envs/default/Library/lib/qt6;${workspaceFolder}/.pixi/envs/default/Scripts;${workspaceFolder}/.pixi/envs/default/bin;${env:PATH}",
+    "CONDA_PREFIX": "${workspaceFolder}/.pixi/envs/default"
   }
 }

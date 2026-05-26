@@ -1,6 +1,108 @@
 {
   "version": "0.2.0",
   "configurations": [
+    // ==================== Windows (MSVC) Configurations ====================
+    {
+      "name": "(Windows) Debug FreeCAD",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "program": "${command:cmake.buildDirectory}/bin/FreeCAD.exe",
+      "args": [],
+      "environment": [
+        {
+          "name": "PATH",
+          "value": "${workspaceFolder}/.pixi/envs/default;${workspaceFolder}/.pixi/envs/default/Library/mingw-w64/bin;${workspaceFolder}/.pixi/envs/default/Library/usr/bin;${workspaceFolder}/.pixi/envs/default/Library/bin;${workspaceFolder}/.pixi/envs/default/Library/lib/qt6;${workspaceFolder}/.pixi/envs/default/Scripts;${workspaceFolder}/.pixi/envs/default/bin;${command:cmake.buildDirectory}/bin;${env:PATH}"
+        },
+        {
+          "name": "CONDA_PREFIX",
+          "value": "${workspaceFolder}/.pixi/envs/default"
+        },
+        {
+          "name": "QT_QPA_PLATFORM_PLUGIN_PATH",
+          "value": "${workspaceFolder}/.pixi/envs/default/Library/lib/qt6/plugins/platforms"
+        },
+        {
+          "name": "QT_PLUGIN_PATH",
+          "value": "${workspaceFolder}/.pixi/envs/default/Library/lib/qt6/plugins"
+        },
+        {
+          "name": "PYDEVD_DISABLE_FILE_VALIDATION",
+          "value": "1"
+        }
+      ],
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "symbolSearchPath": "${workspaceFolder}/build/debug/bin;${workspaceFolder}/build/debug/Mod/Part;${workspaceFolder}/build/debug/Mod/PartDesign;${workspaceFolder}/build/debug/Mod/Sketcher;${workspaceFolder}/build/debug/Mod/Fem;${workspaceFolder}/build/debug/Mod/Mesh;${workspaceFolder}/build/debug/Mod/MeshPart;${workspaceFolder}/build/debug/Mod/TechDraw;${workspaceFolder}/build/debug/Mod/Spreadsheet;${workspaceFolder}/build/debug/Mod/Draft;${workspaceFolder}/build/debug/Mod/BIM;${workspaceFolder}/build/debug/Mod/CAM;${workspaceFolder}/build/debug/Mod/Assembly;${workspaceFolder}/build/debug/Mod/Material;${workspaceFolder}/build/debug/Mod/Measure;${workspaceFolder}/build/debug/Mod/Points;${workspaceFolder}/build/debug/Mod/Import;${workspaceFolder}/build/debug/Mod/Start;${workspaceFolder}/build/debug/Mod/OpenSCAD;${workspaceFolder}/build/debug/Mod/ReverseEngineering;${workspaceFolder}/build/debug/Mod/Surface;${workspaceFolder}/build/debug/Mod/Help;${workspaceFolder}/build/debug/Mod/Plot;${workspaceFolder}/build/debug/Mod/Robot;${workspaceFolder}/build/debug/Mod/Show;${workspaceFolder}/build/debug/Mod/Web;${workspaceFolder}/build/debug/Mod/Test;${workspaceFolder}/build/debug/Mod/AddonManager",
+      "preLaunchTask": "CMake: build"
+    },
+    {
+      "name": "(Windows) Debug FreeCAD + Python",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "program": "${command:cmake.buildDirectory}/bin/FreeCAD.exe",
+      "args": ["${workspaceFolder}/.vscode/scripts/VSCodeAutostartDebug.FCMacro"],
+      "environment": [
+        {
+          "name": "PATH",
+          "value": "${workspaceFolder}/.pixi/envs/default;${workspaceFolder}/.pixi/envs/default/Library/mingw-w64/bin;${workspaceFolder}/.pixi/envs/default/Library/usr/bin;${workspaceFolder}/.pixi/envs/default/Library/bin;${workspaceFolder}/.pixi/envs/default/Library/lib/qt6;${workspaceFolder}/.pixi/envs/default/Scripts;${workspaceFolder}/.pixi/envs/default/bin;${command:cmake.buildDirectory}/bin;${env:PATH}"
+        },
+        {
+          "name": "CONDA_PREFIX",
+          "value": "${workspaceFolder}/.pixi/envs/default"
+        },
+        {
+          "name": "QT_QPA_PLATFORM_PLUGIN_PATH",
+          "value": "${workspaceFolder}/.pixi/envs/default/Library/lib/qt6/plugins/platforms"
+        },
+        {
+          "name": "QT_PLUGIN_PATH",
+          "value": "${workspaceFolder}/.pixi/envs/default/Library/lib/qt6/plugins"
+        },
+        {
+          "name": "PYDEVD_DISABLE_FILE_VALIDATION",
+          "value": "1"
+        }
+      ],
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "symbolSearchPath": "${workspaceFolder}/build/debug/bin;${workspaceFolder}/build/debug/Mod/Part;${workspaceFolder}/build/debug/Mod/PartDesign;${workspaceFolder}/build/debug/Mod/Sketcher;${workspaceFolder}/build/debug/Mod/Fem;${workspaceFolder}/build/debug/Mod/Mesh;${workspaceFolder}/build/debug/Mod/MeshPart;${workspaceFolder}/build/debug/Mod/TechDraw;${workspaceFolder}/build/debug/Mod/Spreadsheet;${workspaceFolder}/build/debug/Mod/Draft;${workspaceFolder}/build/debug/Mod/BIM;${workspaceFolder}/build/debug/Mod/CAM;${workspaceFolder}/build/debug/Mod/Assembly;${workspaceFolder}/build/debug/Mod/Material;${workspaceFolder}/build/debug/Mod/Measure;${workspaceFolder}/build/debug/Mod/Points;${workspaceFolder}/build/debug/Mod/Import;${workspaceFolder}/build/debug/Mod/Start;${workspaceFolder}/build/debug/Mod/OpenSCAD;${workspaceFolder}/build/debug/Mod/ReverseEngineering;${workspaceFolder}/build/debug/Mod/Surface;${workspaceFolder}/build/debug/Mod/Help;${workspaceFolder}/build/debug/Mod/Plot;${workspaceFolder}/build/debug/Mod/Robot;${workspaceFolder}/build/debug/Mod/Show;${workspaceFolder}/build/debug/Mod/Web;${workspaceFolder}/build/debug/Mod/Test;${workspaceFolder}/build/debug/Mod/AddonManager",
+      "presentation": {
+        "hidden": true
+      }
+    },
+    {
+      "name": "(Windows) Debug C++ Tests",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "program": "${command:cmake.buildDirectory}/bin/Base_tests_run.exe",
+      "args": [],
+      "environment": [
+        {
+          "name": "PATH",
+          "value": "${workspaceFolder}/.pixi/envs/default;${workspaceFolder}/.pixi/envs/default/Library/mingw-w64/bin;${workspaceFolder}/.pixi/envs/default/Library/usr/bin;${workspaceFolder}/.pixi/envs/default/Library/bin;${workspaceFolder}/.pixi/envs/default/Library/lib/qt6;${workspaceFolder}/.pixi/envs/default/Scripts;${workspaceFolder}/.pixi/envs/default/bin;${command:cmake.buildDirectory}/bin;${env:PATH}"
+        },
+        {
+          "name": "CONDA_PREFIX",
+          "value": "${workspaceFolder}/.pixi/envs/default"
+        },
+        {
+          "name": "QT_QPA_PLATFORM_PLUGIN_PATH",
+          "value": "${workspaceFolder}/.pixi/envs/default/Library/lib/qt6/plugins/platforms"
+        },
+        {
+          "name": "QT_PLUGIN_PATH",
+          "value": "${workspaceFolder}/.pixi/envs/default/Library/lib/qt6/plugins"
+        }
+      ],
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "symbolSearchPath": "${workspaceFolder}/build/debug/bin",
+      "preLaunchTask": "CMake: build"
+    },
+    // ==================== Linux/macOS Configurations ====================
     {
       "name": "Debug C++ Tests",
       "type": "cppdbg",
@@ -122,12 +224,21 @@
   ],
   "compounds": [
     {
+      "name": "(Windows) Debug FreeCAD C++ + Python",
+      "configurations": ["(Windows) Debug FreeCAD + Python", "Python debugger"],
+      "preLaunchTask": "CMake: build",
+      "stopAll": true,
+      "presentation": {
+        "order": 1
+      }
+    },
+    {
       "name": "Debug FreeCAD",
       "configurations": ["C/C++ debugger", "Python debugger"],
       "preLaunchTask": "CMake: build",
       "stopAll": true,
       "presentation": {
-        "order": 1
+        "order": 2
       }
     }
   ]
