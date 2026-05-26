@@ -162,7 +162,35 @@ clipper.core.h(141,43): error: extra ';' after member function definition [-Werr
 
 > **原理**：FreeCAD 要求 C++20 标准，C++98 兼容性警告毫无意义，安全禁用。
 
-### 2.7 VSCode `settings.json` 中变量替换不生效
+### 2.7 为什么 Pixi 环境使用 Clang 而非 MSVC
+
+在 Windows 上使用 Pixi 编译 FreeCAD 时，编译器是 **clang-cl**（Clang 19.x）而非 MSVC。这是由 Pixi/Conda-forge 生态系统的设计决定，而非 FreeCAD 项目本身的选择。
+
+**原因分析**：
+
+| 原因 | 说明 |
+|------|------|
+| **MSVC 无法打包分发** | MSVC 编译器受微软许可限制，不能作为 conda 包分发。而 Clang 是开源的，可以自由打包到 conda-forge |
+| **依赖 ABI 一致性** | conda-forge 中所有 C++ 依赖（Qt6、OCCT、Boost、VTK 等）都用 clang-cl 编译。用 MSVC 编译 FreeCAD 虽然理论上 ABI 兼容（clang-cl 使用 MSVC ABI），但混合编译运行时可能出现微妙问题 |
+| **跨平台一致性** | conda-forge 在 Linux/macOS 上用 Clang，Windows 上也用 Clang 可以保持工具链一致，减少平台特定问题 |
+
+**技术细节**：
+
+- `pixi.toml` 中的 `compilers` 元包（`>=1.10,<1.11`）在 Windows 上提供 `clang-cl`
+- `CMakePresets.json` 的 `conda-linux` preset 显式指定 `CMAKE_C_COMPILER=clang`，而 `conda-windows` preset **没有**显式指定编译器，CMake 自动从 conda 环境 PATH 中检测到 `clang-cl`
+- 同时依赖 `compiler-rt`（Clang 运行时库），这是 MSVC 体系不需要的
+
+**如果需要使用 MSVC**：
+
+可以脱离 Pixi/Conda 环境，走传统路线：
+
+1. **LibPack 方式**：从 FreeCAD 官方下载预编译的依赖包（LibPack），配合 Visual Studio 的 MSVC 编译
+2. **vcpkg 方式**：用 vcpkg 管理依赖，然后手动配置 CMake 使用 MSVC
+3. **手动编译**：自行编译所有 C++ 依赖，然后用 MSVC 编译 FreeCAD
+
+这些方式都需要自行解决依赖管理，比 Pixi 一键配置要复杂得多。
+
+### 2.8 VSCode `settings.json` 中变量替换不生效
 
 **问题**：在 `.vscode/settings.json` 中使用 `${workspaceFolder}` 等 VSCode 变量时，CMake Tools 扩展可能不会进行变量替换，导致路径被原样传递给 CMake。
 
@@ -495,8 +523,8 @@ build/debug/Mod/Mesh/      → Mesh.pdb, MeshGui.pdb
 | CMake Policy 版本错误 | Coin3D 等第三方 CMake 配置过旧 | 添加 `-DCMAKE_POLICY_VERSION_MINIMUM=3.5` |
 | `llvm-ar.exe: error: unknown option /` | clang-cl 环境下使用了 GNU 风格的归档工具 | 设置 `CMAKE_AR=llvm-lib.exe`，见 §2.5 |
 | `'constexpr' specifier is incompatible with C++98` | Clang 的 `-Wc++98-compat` 警告被 `-Werror` 提升为错误 | 全局添加 `-Wno-c++98-compat`，移除第三方库的 `-Werror`，见 §2.6 |
-| `CMAKE_PREFIX_PATH` 解析为 `/Library` | `settings.json` 中 `${workspaceFolder}` 未被替换 | 使用绝对路径替代变量，见 §2.7 |
-| `mixes Clang and MSVC compiler` | CMake 同时检测到 Clang 和 MSVC | 确保 `CONDA_PREFIX` 正确设置，或显式指定 `CMAKE_C_COMPILER`/`CMAKE_CXX_COMPILER` |
+| `CMAKE_PREFIX_PATH` 解析为 `/Library` | `settings.json` 中 `${workspaceFolder}` 未被替换 | 使用绝对路径替代变量，见 §2.8 |
+| `mixes Clang and MSVC compiler` | CMake 同时检测到 Clang 和 MSVC | 确保 `CONDA_PREFIX` 正确设置，或显式指定 `CMAKE_C_COMPILER`/`CMAKE_CXX_COMPILER`，见 §2.7 |
 
 ---
 
