@@ -200,6 +200,18 @@
             "type": "FILEPATH",
             "value": "$env{CONDA_PREFIX}/Library/bin/llvm-lib.exe"
           },
+          "CMAKE_C_COMPILER": {
+            "type": "STRING",
+            "value": "clang-cl"
+          },
+          "CMAKE_CXX_COMPILER": {
+            "type": "STRING",
+            "value": "clang-cl"
+          },
+          "CMAKE_LINKER": {
+            "type": "FILEPATH",
+            "value": "$env{CONDA_PREFIX}/Library/bin/lld-link.exe"
+          },
           "CMAKE_INSTALL_PREFIX": {
             "type": "FILEPATH",
             "value": "$env{CONDA_PREFIX}/Library"
