@@ -61,7 +61,7 @@ macro(CompilerChecksAndSetups)
 
         # For now only set pedantic option for clang
         if(CMAKE_COMPILER_IS_CLANGXX)
-            set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wno-write-strings ${CMAKE_CXX_FLAGS}")
+            set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wno-write-strings -Wno-c++98-compat -Wno-c++98-compat-pedantic ${CMAKE_CXX_FLAGS}")
         else()
             set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-write-strings ${CMAKE_CXX_FLAGS}")
         endif()

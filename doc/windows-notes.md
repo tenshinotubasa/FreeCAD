@@ -96,6 +96,100 @@ CMake Error: Could not find LibPack in specified location: D:/Workspace/.../Free
 
 **解决**：必须使用 `conda-windows-debug` preset，它会设置 `FREECAD_LIBPACK_USE=OFF`。不要用默认的 `debug` preset。
 
+### 2.5 Clang 编译器与 `llvm-ar` 不兼容
+
+**问题**：Pixi 环境在 Windows 上使用 `clang-cl`（Clang 19.x）作为编译器，但 CMake 自动检测到的静态库归档工具是 `llvm-ar.exe`。`llvm-ar` 不支持 MSVC 风格的命令行参数（如 `/` 前缀选项），导致链接静态库时报错：
+
+```
+llvm-ar.exe: error: unknown option /
+FAILED: src/3rdParty/FastSignals/libfastsignals/libfastsignals.lib
+```
+
+**根因**：Clang-cl 在 Windows 上模拟 MSVC 编译器，生成 MSVC 风格的 `.lib` 文件，而 `llvm-ar` 是 GNU 风格的归档工具，两者参数格式不兼容。Windows + clang-cl 应使用 `llvm-lib.exe`（模拟 MSVC `lib.exe` 的工具）。
+
+**解决**：在 `CMakePresets.json` 的 `conda-windows` preset 中添加 `CMAKE_AR`：
+
+```json
+{
+  "name": "conda-windows",
+  "hidden": true,
+  "cacheVariables": {
+    "CMAKE_AR": {
+      "type": "FILEPATH",
+      "value": "$env{CONDA_PREFIX}/Library/bin/llvm-lib.exe"
+    }
+  }
+}
+```
+
+> **注意**：修改 `CMakePresets.json` 后必须删除 `build/debug` 目录重新配置，因为 CMakeCache 中的 `CMAKE_AR` 只在首次配置时生效。
+
+### 2.6 Clang 的 C++98 兼容性警告（-Wc++98-compat）
+
+**问题**：Clang 编译器默认启用 `-Wc++98-compat` 和 `-Wc++98-compat-pedantic` 警告，会为所有 C++11 及以上特性（如 `constexpr`、`auto`、`override`、`nullptr`、范围 `for` 等）产生大量警告。在以下场景中会导致编译失败：
+
+1. **第三方库 Clipper2** 自身 CMakeLists.txt 中设置了 `-Werror`（将警告视为错误），导致 `-Wc++98-compat` 警告变为编译错误
+2. **FreeCAD 自身代码**在 `CompilerChecksAndSetups.cmake` 中设置了 `-Wpedantic`，也会触发这些警告
+
+**错误示例**：
+
+```
+clipper.version.h(4,1): error: 'constexpr' specifier is incompatible with C++98 [-Werror,-Wc++98-compat]
+clipper.core.h(31,47): error: 'override' keyword is incompatible with C++98 [-Werror,-Wc++98-compat]
+clipper.core.h(141,43): error: extra ';' after member function definition [-Werror,-Wextra-semi]
+```
+
+**解决**：
+
+1. **全局禁用 C++98 兼容性警告**：在 `cMake/FreeCAD_Helpers/CompilerChecksAndSetups.cmake` 的 Clang 编译标志中添加 `-Wno-c++98-compat -Wno-c++98-compat-pedantic`：
+
+   ```cmake
+   if(CMAKE_COMPILER_IS_CLANGXX)
+       set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wno-write-strings -Wno-c++98-compat -Wno-c++98-compat-pedantic ${CMAKE_CXX_FLAGS}")
+   ```
+
+2. **移除第三方库的 `-Werror`**：在 `src/3rdParty/Clipper2/CMakeLists.txt` 中，将非 MSVC 分支的 `-Werror` 移除，并添加 `-Wno-c++98-compat`：
+
+   ```cmake
+   # 修改前
+   target_compile_options(Clipper2 PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+   # 修改后
+   target_compile_options(Clipper2 PRIVATE -Wall -Wextra -Wpedantic -Wno-c++98-compat -Wno-c++98-compat-pedantic)
+   ```
+
+   同样修改 `Clipper2Z` 的编译选项。MSVC 分支也应移除 `/WX`（等价于 `-Werror`）。
+
+> **原理**：FreeCAD 要求 C++20 标准，C++98 兼容性警告毫无意义，安全禁用。
+
+### 2.7 VSCode `settings.json` 中变量替换不生效
+
+**问题**：在 `.vscode/settings.json` 中使用 `${workspaceFolder}` 等 VSCode 变量时，CMake Tools 扩展可能不会进行变量替换，导致路径被原样传递给 CMake。
+
+**典型表现**：
+
+- `CMAKE_PREFIX_PATH` 被解析为 `/Library` 而非完整路径
+- `CONDA_PREFIX` 环境变量为空，导致 `$env{CONDA_PREFIX}` 在 `CMakePresets.json` 中解析为空字符串
+- CMake 命令行中出现 `-DCMAKE_PREFIX_PATH:FILEPATH=/Library` 等异常路径
+
+**根因**：VSCode 的变量替换机制（`${workspaceFolder}`、`${env:PATH}` 等）在 `settings.json` 中的支持因扩展而异。CMake Tools 对 `cmake.environment` 中的变量替换支持不完整。
+
+**解决**：在 `settings.json` 的 `cmake.environment` 和 `cmake.configureSettings` 中，将 `${workspaceFolder}` 替换为**绝对路径**：
+
+```json
+{
+  "cmake.configureSettings": {
+    "CMAKE_PREFIX_PATH": "d:/Workspace/Shisukon/OpenSource/FreeCAD/.pixi/envs/default/Library"
+  },
+  "cmake.environment": {
+    "PATH": "d:/Workspace/Shisukon/OpenSource/FreeCAD/.pixi/envs/default;...",
+    "CONDA_PREFIX": "d:/Workspace/Shisukon/OpenSource/FreeCAD/.pixi/envs/default"
+  }
+}
+```
+
+> **注意**：`launch.json` 中 `${workspaceFolder}` 的替换是正常的，因为调试适配器完整支持 VSCode 变量。只有 `settings.json` 中的部分字段可能有问题。
+
 ---
 
 ## 3. VSCode CMake Tools 集成
@@ -286,6 +380,8 @@ build/debug/Mod/Mesh/      → Mesh.pdb, MeshGui.pdb
 | 5 | CMake 生成器是否为 Ninja | 检查 `CMakeCache.txt` 中 `CMAKE_GENERATOR` |
 | 6 | `cmake.environment` PATH 是否包含所有 Pixi 路径 | 检查 `.vscode/settings.json` |
 | 7 | `Library/mingw-w64/bin` 是否在 PATH 中 | moc.exe 依赖此目录的 DLL |
+| 8 | `CMAKE_AR` 是否为 `llvm-lib.exe` | 检查 `CMakeCache.txt`，见 §2.5 |
+| 9 | `.vscode/settings.json` 中变量是否解析 | `${workspaceFolder}` 在 settings.json 中**不支持**替换 |
 
 ### 5.2 调试阶段
 
@@ -397,6 +493,10 @@ build/debug/Mod/Mesh/      → Mesh.pdb, MeshGui.pdb
 | 调试时断点不命中（灰色圆圈） | PDB 符号未加载 | 配置 `symbolSearchPath` |
 | FreeCAD 启动后立即退出 | DLL 路径不在 PATH 中 | 在 `environment` 中添加 Pixi PATH |
 | CMake Policy 版本错误 | Coin3D 等第三方 CMake 配置过旧 | 添加 `-DCMAKE_POLICY_VERSION_MINIMUM=3.5` |
+| `llvm-ar.exe: error: unknown option /` | clang-cl 环境下使用了 GNU 风格的归档工具 | 设置 `CMAKE_AR=llvm-lib.exe`，见 §2.5 |
+| `'constexpr' specifier is incompatible with C++98` | Clang 的 `-Wc++98-compat` 警告被 `-Werror` 提升为错误 | 全局添加 `-Wno-c++98-compat`，移除第三方库的 `-Werror`，见 §2.6 |
+| `CMAKE_PREFIX_PATH` 解析为 `/Library` | `settings.json` 中 `${workspaceFolder}` 未被替换 | 使用绝对路径替代变量，见 §2.7 |
+| `mixes Clang and MSVC compiler` | CMake 同时检测到 Clang 和 MSVC | 确保 `CONDA_PREFIX` 正确设置，或显式指定 `CMAKE_C_COMPILER`/`CMAKE_CXX_COMPILER` |
 
 ---
 
@@ -408,6 +508,7 @@ build/debug/Mod/Mesh/      → Mesh.pdb, MeshGui.pdb
 |------|------|
 | Windows | 11 (Build 26200) |
 | Visual Studio | 2022 Community (MSVC 19.44.35219.0) |
+| Clang (Pixi) | 19.1.7 (clang-cl) |
 | Windows SDK | 10.0.26100.0 |
 | CMake | 4.2.3 |
 | Ninja | (Pixi 管理) |
